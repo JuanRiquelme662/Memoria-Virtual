@@ -25,6 +25,13 @@ int converter_endereco(const char *linha, long *endereco) {
         return -1;
     }
 
+    while (*fim == ' ' || *fim == '\t') {
+        fim++;
+    }
+
+    if (*fim != '\0' && *fim != '\n' && *fim != '\r') {
+        return -1;
+    }
     if (*fim != '\0' && *fim != '\n' && *fim != '\r') {
         return -1;
     }
