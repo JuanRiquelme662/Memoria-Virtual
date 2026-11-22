@@ -146,6 +146,14 @@ int inserir_tlb(int pagina, int frame, const char *algoritmo) {
     return posicao;
 }
 
+void invalidar_tlb(int pagina) {
+    int posicao = buscar_tlb(pagina);
+
+    if (posicao != -1) {
+        tlb[posicao].valida = 0;
+    }
+}
+
 int main(int argc, char **argv) {
     //verificacoes de argumentos
     if (argc != 4) {
