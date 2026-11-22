@@ -72,6 +72,25 @@ int converter_endereco(const char *linha, long *endereco) {
     return 0;
 }
 
+int escolher_vitima(const char *algoritmo) {
+    const long *criterio;
+
+    if (strcmp(algoritmo, "fifo") == 0) {
+        criterio = frame_carregado_em;
+    } else {
+        criterio = frame_ultimo_uso;
+    }
+
+    int vitima = 0;
+    for (int i = 1; i < NUM_FRAMES; i++) {
+        if (criterio[i] < criterio[vitima]) {
+            vitima = i;
+        }
+    }
+
+    return vitima;
+}
+
 int main(int argc, char **argv) {
     //verificacoes de argumentos
     if (argc != 4) {
