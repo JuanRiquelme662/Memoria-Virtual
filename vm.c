@@ -5,6 +5,23 @@
 
 #define ENDERECO_MAX 65535
 #define TAM_BUFFER   64
+
+//bites por pagina e por frame
+#define TAM_PAGINA   256
+//paginas logicas
+#define NUM_PAGINAS  256
+//frames de memoria fisica
+#define NUM_FRAMES   128
+
+#define ARQ_BACKING  "BACKING_STORE.bin"
+#define ARQ_SAIDA    "correct.txt"
+
+//memoria fisica num_frames x tam_pagina
+unsigned char memoria_fisica[NUM_FRAMES][TAM_PAGINA];
+//tabela de paginas, cada entrada contem o numero do frame correspondente a pagina logica, ou -1 se a pagina nao estiver na memoria fisica
+int tabela_paginas[NUM_PAGINAS];
+//proximo frmae livre
+int proximo_frame_livre = 0;    
 //funcao de verificacao
 //essa operacao e colocada dentro de uma fucnao porque ela e usada para verificar dois argumentos, o 2 e o 3
 int algoritmo_valido(const char *s) {
