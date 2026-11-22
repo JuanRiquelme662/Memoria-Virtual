@@ -15,7 +15,7 @@
 
 #define ARQ_BACKING  "BACKING_STORE.bin"
 #define ARQ_SAIDA    "correct.txt"
-#define TAM_TLB 1
+#define TAM_TLB 16
 
 typedef struct {
     int  pagina;
@@ -69,9 +69,6 @@ int converter_endereco(const char *linha, long *endereco) {
         fim++;
     }
 
-    if (*fim != '\0' && *fim != '\n' && *fim != '\r') {
-        return -1;
-    }
     if (*fim != '\0' && *fim != '\n' && *fim != '\r') {
         return -1;
     }
@@ -186,6 +183,7 @@ int main(int argc, char **argv) {
     int total_enderecos = 0;
     int page_faults = 0;
     int status = 0;
+    int tlb_hits = 0;
 
     arquivo = fopen(arquivo_enderecos, "r");
     if (arquivo == NULL) {
@@ -211,6 +209,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < NUM_PAGINAS; i++) {
         tabela_paginas[i] = -1;
     }
+    
+    for (int i = 0; i < TAM_TLB; i++) {
+        tlb[i].valida = 0;
+    }
 
     while (fgets(buffer, sizeof(buffer), arquivo) != NULL) {
         numero_linha++;
@@ -232,49 +234,63 @@ int main(int argc, char **argv) {
         long pagina = endereco >> 8;
         long offset = endereco & 0xFF;
 
-        if (tabela_paginas[pagina] == -1) {
-            int frame_destino;
+        int frame;
+        int posicao_tlb = buscar_tlb((int)pagina);
 
-            if (proximo_frame_livre < NUM_FRAMES) {
-                //ainda ha frames livres, usa o proximo frame livre
-                frame_destino = proximo_frame_livre;
-                proximo_frame_livre++;
-            } else {
-                //memoria cheia, escolhe uma vitima para substituir
-                frame_destino = escolher_vitima(algoritmo_pagina);
-                tabela_paginas[frame_para_pagina[frame_destino]] = -1;
+        if (posicao_tlb != -1) {
+
+            frame = tlb[posicao_tlb].frame;
+            tlb[posicao_tlb].ultimo_uso = relogio;
+            tlb_hits++;
+        } else {
+
+            if (tabela_paginas[pagina] == -1) {
+
+                int frame_destino;
+
+                if (proximo_frame_livre < NUM_FRAMES) {
+                    frame_destino = proximo_frame_livre;
+                    proximo_frame_livre++;
+                } else {
+                    frame_destino = escolher_vitima(algoritmo_pagina);
+
+                    int pagina_vitima = frame_para_pagina[frame_destino];
+                    tabela_paginas[pagina_vitima] = -1;
+                    invalidar_tlb(pagina_vitima);
+                }
+
+                if (fseek(backing, pagina * TAM_PAGINA, SEEK_SET) != 0) {
+                    fprintf(stderr, "Erro: falha ao posicionar em '%s' (pagina %ld).\n", ARQ_BACKING, pagina);
+                    status = 1;
+                    goto fim;
+                }
+
+                if (fread(memoria_fisica[frame_destino], 1, TAM_PAGINA, backing) != TAM_PAGINA) {
+                    fprintf(stderr, "Erro: falha ao ler a pagina %ld de '%s' (arquivo menor que o esperado?).\n",
+                            pagina, ARQ_BACKING);
+                    status = 1;
+                    goto fim;
+                }
+
+                tabela_paginas[pagina] = frame_destino;
+                frame_para_pagina[frame_destino] = (int)pagina;
+                frame_carregado_em[frame_destino] = relogio;
+                page_faults++;
             }
 
-            if (fseek(backing, pagina * TAM_PAGINA, SEEK_SET) != 0) {
-                fprintf(stderr, "Erro: falha ao posicionar em '%s' (pagina %ld).\n", ARQ_BACKING, pagina);
-                status = 1;
-                goto fim;
-            }
+            frame = tabela_paginas[pagina];
 
-            if (fread(memoria_fisica[frame_destino], 1, TAM_PAGINA, backing) != TAM_PAGINA) {
-                fprintf(stderr, "Erro: falha ao ler a pagina %ld de '%s' (arquivo menor que o esperado?).\n",pagina, ARQ_BACKING);
-                status = 1;
-                goto fim;
-            } else {
-                frame_destino = escolher_vitima(algoritmo_pagina);
-
-                int pagina_vitima = frame_para_pagina[frame_destino];
-                tabela_paginas[pagina_vitima] = -1;
-                invalidar_tlb(pagina_vitima);
-            }
-
-            tabela_paginas[pagina] = frame_destino;
-            frame_para_pagina[frame_destino] = (int)pagina;
-            frame_carregado_em[frame_destino] = relogio;
-            page_faults++;
+            posicao_tlb = inserir_tlb((int)pagina, frame, algoritmo_tlb);
         }
 
-        int frame = tabela_paginas[pagina];
+      
         frame_ultimo_uso[frame] = relogio;
+
         long endereco_fisico = (long)frame * TAM_PAGINA + offset;
         signed char valor = (signed char)memoria_fisica[frame][offset];
 
-        fprintf(saida, "Virtual address: %ld TLB: %d Physical address: %ld Value: %d\n",endereco, 0, endereco_fisico, valor);
+        fprintf(saida, "Virtual address: %ld TLB: %d Physical address: %ld Value: %d\n",
+                endereco, posicao_tlb, endereco_fisico, valor);
 
         total_enderecos++;
     }
@@ -286,7 +302,7 @@ int main(int argc, char **argv) {
     }
 
     //temporario
-    printf("Enderecos traduzidos: %d | Page faults: %d\n", total_enderecos, page_faults);
+    printf("Enderecos traduzidos: %d | Page faults: %d | TLB hits: %d\n",total_enderecos, page_faults, tlb_hits);
 
 fim:
     if (arquivo != NULL) fclose(arquivo);
