@@ -103,6 +103,7 @@ int escolher_vitima(const char *algoritmo) {
     return vitima;
 }
 
+//funcoes de manipulacao da TLB
 int buscar_tlb(int pagina) {
     for (int i = 0; i < TAM_TLB; i++) {
         if (tlb[i].valida && tlb[i].pagina == pagina) {
@@ -110,6 +111,39 @@ int buscar_tlb(int pagina) {
         }
     }
     return -1;
+}
+
+//Insere a página na TLB e retorna a posição usada
+int inserir_tlb(int pagina, int frame, const char *algoritmo) {
+    int posicao = -1;
+
+    for (int i = 0; i < TAM_TLB; i++) {
+        if (!tlb[i].valida) {
+            posicao = i;
+            break;
+        }
+    }
+
+    if (posicao == -1) {
+        int usa_fifo = (strcmp(algoritmo, "fifo") == 0);
+
+        posicao = 0;
+        for (int i = 1; i < TAM_TLB; i++) {
+            long atual = usa_fifo ? tlb[i].carregada_em       : tlb[i].ultimo_uso;
+            long menor = usa_fifo ? tlb[posicao].carregada_em : tlb[posicao].ultimo_uso;
+            if (atual < menor) {
+                posicao = i;
+            }
+        }
+    }
+
+    tlb[posicao].pagina       = pagina;
+    tlb[posicao].frame        = frame;
+    tlb[posicao].valida       = 1;
+    tlb[posicao].carregada_em = relogio;
+    tlb[posicao].ultimo_uso   = relogio;
+
+    return posicao;
 }
 
 int main(int argc, char **argv) {
