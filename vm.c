@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < NUM_PAGINAS; i++) {
         tabela_paginas[i] = -1;
     }
-    
+
     for (int i = 0; i < TAM_TLB; i++) {
         tlb[i].valida = 0;
     }
@@ -303,6 +303,20 @@ int main(int argc, char **argv) {
 
     //temporario
     printf("Enderecos traduzidos: %d | Page faults: %d | TLB hits: %d\n",total_enderecos, page_faults, tlb_hits);
+    
+    double taxa_page_fault = 0.0;
+    double taxa_tlb_hit    = 0.0;
+
+    if (total_enderecos > 0) {
+        taxa_page_fault = (double)page_faults / total_enderecos;
+        taxa_tlb_hit    = (double)tlb_hits    / total_enderecos;
+    }
+
+    fprintf(saida, "Number of Translated Addresses = %d\n", total_enderecos);
+    fprintf(saida, "Page Faults = %d\n", page_faults);
+    fprintf(saida, "Page Fault Rate = %.3f\n", taxa_page_fault);
+    fprintf(saida, "TLB Hits = %d\n", tlb_hits);
+    fprintf(saida, "TLB Hit Rate = %.3f\n", taxa_tlb_hit);
 
 fim:
     if (arquivo != NULL) fclose(arquivo);
