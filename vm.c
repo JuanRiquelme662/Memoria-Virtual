@@ -15,6 +15,18 @@
 
 #define ARQ_BACKING  "BACKING_STORE.bin"
 #define ARQ_SAIDA    "correct.txt"
+#define TAM_TLB 1
+
+typedef struct {
+    int  pagina;
+    int  frame;
+    int  valida;
+    long carregada_em;
+    long ultimo_uso;
+} EntradaTLB;
+
+EntradaTLB tlb[TAM_TLB];
+
 
 //memoria fisica num_frames x tam_pagina
 unsigned char memoria_fisica[NUM_FRAMES][TAM_PAGINA];
