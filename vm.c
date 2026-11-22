@@ -255,6 +255,12 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "Erro: falha ao ler a pagina %ld de '%s' (arquivo menor que o esperado?).\n",pagina, ARQ_BACKING);
                 status = 1;
                 goto fim;
+            } else {
+                frame_destino = escolher_vitima(algoritmo_pagina);
+
+                int pagina_vitima = frame_para_pagina[frame_destino];
+                tabela_paginas[pagina_vitima] = -1;
+                invalidar_tlb(pagina_vitima);
             }
 
             tabela_paginas[pagina] = frame_destino;
