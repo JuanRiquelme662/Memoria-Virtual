@@ -170,12 +170,17 @@ int main(int argc, char **argv) {
         long offset = endereco & 0xFF;
 
         if (tabela_paginas[pagina] == -1) {
-            if (proximo_frame_livre >= NUM_FRAMES) {
-                fprintf(stderr, "Aviso: memoria fisica cheia na linha %d (substituicao de pagina ainda nao implementada).\n",numero_linha);
-                break;
-            }
+            int frame_destino;
 
-            int frame_destino = proximo_frame_livre;
+            if (proximo_frame_livre < NUM_FRAMES) {
+                //ainda ha frames livres, usa o proximo frame livre
+                frame_destino = proximo_frame_livre;
+                proximo_frame_livre++;
+            } else {
+                //memoria cheia, escolhe uma vitima para substituir
+                frame_destino = escolher_vitima(algoritmo_pagina);
+                tabela_paginas[frame_para_pagina[frame_destino]] = -1;
+            }
 
             if (fseek(backing, pagina * TAM_PAGINA, SEEK_SET) != 0) {
                 fprintf(stderr, "Erro: falha ao posicionar em '%s' (pagina %ld).\n", ARQ_BACKING, pagina);
@@ -192,7 +197,6 @@ int main(int argc, char **argv) {
             tabela_paginas[pagina] = frame_destino;
             frame_para_pagina[frame_destino] = (int)pagina;
             frame_carregado_em[frame_destino] = relogio;
-            proximo_frame_livre++;
             page_faults++;
         }
 
