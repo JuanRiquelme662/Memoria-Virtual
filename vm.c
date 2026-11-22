@@ -78,52 +78,117 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Erro: algoritmo de substituicao da TLB invalido '%s' (use fifo ou lru).\n", argv[3]);
         return 1;
     }
-
+    
     //guarda os argumentos em variaveis para melhor legibilidadeq
     const char *arquivo_enderecos = argv[1];
     const char *algoritmo_pagina  = argv[2];
     const char *algoritmo_tlb     = argv[3];
 
-    //abri o arquivo
-    FILE *arquivo = fopen(arquivo_enderecos, "r");
-    if (arquivo == NULL) {
-        fprintf(stderr, "Erro: nao foi possivel abrir '%s': %s\n", arquivo_enderecos, strerror(errno));
-        return 1;
-    }
-
+    //recursos declarados aqui para o goto fim libera-;los
+    FILE *arquivo = NULL; 
+    FILE *backing = NULL;
+    FILE *saida   = NULL;   
     char buffer[TAM_BUFFER];
     int numero_linha = 0;
+    int total_enderecos = 0;
+    int page_faults = 0;
+    int status = 0;
+
+    arquivo = fopen(arquivo_enderecos, "r");
+    if (arquivo == NULL) {
+        fprintf(stderr, "Erro: nao foi possivel abrir '%s': %s\n", arquivo_enderecos, strerror(errno));
+        status = 1;
+        goto fim;
+    }
+
+    backing = fopen(ARQ_BACKING, "rb");
+    if (backing == NULL) {
+        fprintf(stderr, "Erro: nao foi possivel abrir '%s': %s\n", ARQ_BACKING, strerror(errno));
+        status = 1;
+        goto fim;
+    }
+
+    saida = fopen(ARQ_SAIDA, "w");
+    if (saida == NULL) {
+        fprintf(stderr, "Erro: nao foi possivel criar '%s': %s\n", ARQ_SAIDA, strerror(errno));
+        status = 1;
+        goto fim;
+    }
+
+    for (int i = 0; i < NUM_PAGINAS; i++) {
+        tabela_paginas[i] = -1;
+    }
 
     while (fgets(buffer, sizeof(buffer), arquivo) != NULL) {
         numero_linha++;
 
-        //linha maior que o buffer ou mal formatada
         if (strchr(buffer, '\n') == NULL && !feof(arquivo)) {
             fprintf(stderr, "Erro: linha %d de '%s' muito longa ou mal formatada.\n", numero_linha, arquivo_enderecos);
-            fclose(arquivo);
-            return 1;
+            status = 1;
+            goto fim;
         }
 
         long endereco;
         if (converter_endereco(buffer, &endereco) != 0) {
-            fprintf(stderr, "Erro: formato invalido na linha %d de '%s' (esperado um inteiro de 0 a %d por linha).\n",numero_linha, arquivo_enderecos, ENDERECO_MAX);
-            fclose(arquivo);
-            return 1;
+            fprintf(stderr, "Erro: formato invalido na linha %d de '%s' (esperado um inteiro de 0 a %d por linha).\n",
+                    numero_linha, arquivo_enderecos, ENDERECO_MAX);
+            status = 1;
+            goto fim;
         }
 
         long pagina = endereco >> 8;
         long offset = endereco & 0xFF;
 
-        //linha temporaria para teste
-        printf("linha %d: endereco=%ld pagina=%ld offset=%ld\n", numero_linha, endereco, pagina, offset);
+        if (tabela_paginas[pagina] == -1) {
+            if (proximo_frame_livre >= NUM_FRAMES) {
+                /* Substituição de página ainda não implementada nesta etapa */
+                fprintf(stderr, "Aviso: memoria fisica cheia na linha %d (substituicao de pagina ainda nao implementada).\n",
+                        numero_linha);
+                break;
+            }
+
+            int frame_destino = proximo_frame_livre;
+
+            if (fseek(backing, pagina * TAM_PAGINA, SEEK_SET) != 0) {
+                fprintf(stderr, "Erro: falha ao posicionar em '%s' (pagina %ld).\n", ARQ_BACKING, pagina);
+                status = 1;
+                goto fim;
+            }
+
+            if (fread(memoria_fisica[frame_destino], 1, TAM_PAGINA, backing) != TAM_PAGINA) {
+                fprintf(stderr, "Erro: falha ao ler a pagina %ld de '%s' (arquivo menor que o esperado?).\n",
+                        pagina, ARQ_BACKING);
+                status = 1;
+                goto fim;
+            }
+
+            tabela_paginas[pagina] = frame_destino;
+            proximo_frame_livre++;
+            page_faults++;
+        }
+
+        int frame = tabela_paginas[pagina];
+        long endereco_fisico = (long)frame * TAM_PAGINA + offset;
+        signed char valor = (signed char)memoria_fisica[frame][offset];
+
+        fprintf(saida, "Virtual address: %ld TLB: %d Physical address: %ld Value: %d\n",
+                endereco, 0, endereco_fisico, valor);
+
+        total_enderecos++;
     }
 
     if (ferror(arquivo)) {
         fprintf(stderr, "Erro: falha ao ler '%s'.\n", arquivo_enderecos);
-        fclose(arquivo);
-        return 1;
+        status = 1;
+        goto fim;
     }
 
-    fclose(arquivo);
-    return 0;
+    //temporario
+    printf("Enderecos traduzidos: %d | Page faults: %d\n", total_enderecos, page_faults);
+
+fim:
+    if (arquivo != NULL) fclose(arquivo);
+    if (backing != NULL) fclose(backing);
+    if (saida   != NULL) fclose(saida);
+    return status;
 }
