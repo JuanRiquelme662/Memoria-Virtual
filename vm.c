@@ -22,6 +22,17 @@ unsigned char memoria_fisica[NUM_FRAMES][TAM_PAGINA];
 int tabela_paginas[NUM_PAGINAS];
 //proximo frmae livre
 int proximo_frame_livre = 0;    
+
+//metadados de cada frame
+//qual pagina esta cada frame
+int  frame_para_pagina[NUM_FRAMES];
+//quando o frame foi carregado
+long frame_carregado_em[NUM_FRAMES];
+//quando o frame foi usado pela ultima vez
+long frame_ultimo_uso[NUM_FRAMES];    
+
+//relogio logico
+long relogio = 0;
 //funcao de verificacao
 //essa operacao e colocada dentro de uma fucnao porque ela e usada para verificar dois argumentos, o 2 e o 3
 int algoritmo_valido(const char *s) {
