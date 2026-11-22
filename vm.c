@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 
     while (fgets(buffer, sizeof(buffer), arquivo) != NULL) {
         numero_linha++;
-
+        relogio++;   
         if (strchr(buffer, '\n') == NULL && !feof(arquivo)) {
             fprintf(stderr, "Erro: linha %d de '%s' muito longa ou mal formatada.\n", numero_linha, arquivo_enderecos);
             status = 1;
@@ -152,9 +152,7 @@ int main(int argc, char **argv) {
 
         if (tabela_paginas[pagina] == -1) {
             if (proximo_frame_livre >= NUM_FRAMES) {
-                /* Substituição de página ainda não implementada nesta etapa */
-                fprintf(stderr, "Aviso: memoria fisica cheia na linha %d (substituicao de pagina ainda nao implementada).\n",
-                        numero_linha);
+                fprintf(stderr, "Aviso: memoria fisica cheia na linha %d (substituicao de pagina ainda nao implementada).\n",numero_linha);
                 break;
             }
 
@@ -167,23 +165,24 @@ int main(int argc, char **argv) {
             }
 
             if (fread(memoria_fisica[frame_destino], 1, TAM_PAGINA, backing) != TAM_PAGINA) {
-                fprintf(stderr, "Erro: falha ao ler a pagina %ld de '%s' (arquivo menor que o esperado?).\n",
-                        pagina, ARQ_BACKING);
+                fprintf(stderr, "Erro: falha ao ler a pagina %ld de '%s' (arquivo menor que o esperado?).\n",pagina, ARQ_BACKING);
                 status = 1;
                 goto fim;
             }
 
             tabela_paginas[pagina] = frame_destino;
+            frame_para_pagina[frame_destino] = (int)pagina;
+            frame_carregado_em[frame_destino] = relogio;
             proximo_frame_livre++;
             page_faults++;
         }
 
         int frame = tabela_paginas[pagina];
+        frame_ultimo_uso[frame] = relogio;
         long endereco_fisico = (long)frame * TAM_PAGINA + offset;
         signed char valor = (signed char)memoria_fisica[frame][offset];
 
-        fprintf(saida, "Virtual address: %ld TLB: %d Physical address: %ld Value: %d\n",
-                endereco, 0, endereco_fisico, valor);
+        fprintf(saida, "Virtual address: %ld TLB: %d Physical address: %ld Value: %d\n",endereco, 0, endereco_fisico, valor);
 
         total_enderecos++;
     }
