@@ -103,6 +103,15 @@ int escolher_vitima(const char *algoritmo) {
     return vitima;
 }
 
+int buscar_tlb(int pagina) {
+    for (int i = 0; i < TAM_TLB; i++) {
+        if (tlb[i].valida && tlb[i].pagina == pagina) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int main(int argc, char **argv) {
     //verificacoes de argumentos
     if (argc != 4) {
