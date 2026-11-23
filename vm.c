@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <pthread.h>
 
 #define ENDERECO_MAX 65535
 #define TAM_BUFFER   64
@@ -24,6 +25,13 @@ typedef struct {
     long carregada_em;
     long ultimo_uso;
 } EntradaTLB;
+
+//struct referente as trheads
+typedef struct {
+    int indice;
+    int pagina;
+    int achou;
+} ArgBuscaTLB;
 
 EntradaTLB tlb[TAM_TLB];
 
@@ -49,6 +57,13 @@ long relogio = 0;
 //essa operacao e colocada dentro de uma fucnao porque ela e usada para verificar dois argumentos, o 2 e o 3
 int algoritmo_valido(const char *s) {
     return strcmp(s, "fifo") == 0 || strcmp(s, "lru") == 0;
+}
+
+void *thread_buscar_entrada(void *arg) {
+    ArgBuscaTLB *a = (ArgBuscaTLB *)arg;
+
+    a->achou = (tlb[a->indice].valida && tlb[a->indice].pagina == a->pagina);
+    return NULL;
 }
 
 int converter_endereco(const char *linha, long *endereco) {
@@ -102,11 +117,38 @@ int escolher_vitima(const char *algoritmo) {
 
 //funcoes de manipulacao da TLB
 int buscar_tlb(int pagina) {
+    pthread_t   threads[TAM_TLB];
+    ArgBuscaTLB args[TAM_TLB];
+    int         criada[TAM_TLB];
+    //cria uma thread por entrada, e cada thread recebe a sua propia struct
     for (int i = 0; i < TAM_TLB; i++) {
-        if (tlb[i].valida && tlb[i].pagina == pagina) {
+        args[i].indice = i;
+        args[i].pagina = pagina;
+        args[i].achou  = 0;
+
+        if (pthread_create(&threads[i], NULL, thread_buscar_entrada, &args[i]) == 0) {
+            criada[i] = 1;
+        } else {
+            ///Se a thread não puder ser criada, a própria thread principal examina a entrada,
+            //para o programa não falhar nem perder um acerto
+            criada[i] = 0;
+            thread_buscar_entrada(&args[i]);
+        }
+    }
+    //antes de ler os resultados, espera todas as threads terminarem
+    for (int i = 0; i < TAM_TLB; i++) {
+        if (criada[i]) {
+            pthread_join(threads[i], NULL);
+        }
+    }
+
+    //quando ha a garantia que mais nem uma thread esta rodando a thread principal le os resultados
+    for (int i = 0; i < TAM_TLB; i++) {
+        if (args[i].achou) {
             return i;
         }
     }
+
     return -1;
 }
 
@@ -303,7 +345,7 @@ int main(int argc, char **argv) {
 
     //temporario
     printf("Enderecos traduzidos: %d | Page faults: %d | TLB hits: %d\n",total_enderecos, page_faults, tlb_hits);
-    
+
     double taxa_page_fault = 0.0;
     double taxa_tlb_hit    = 0.0;
 
