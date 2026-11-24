@@ -343,9 +343,6 @@ int main(int argc, char **argv) {
         goto fim;
     }
 
-    //temporario
-    printf("Enderecos traduzidos: %d | Page faults: %d | TLB hits: %d\n",total_enderecos, page_faults, tlb_hits);
-
     double taxa_page_fault = 0.0;
     double taxa_tlb_hit    = 0.0;
 

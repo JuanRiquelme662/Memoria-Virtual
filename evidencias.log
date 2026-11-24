@@ -10490,4 +10490,279 @@ Enderecos traduzidos: 1000 | Page faults: 539 | TLB hits: 54
 Files correct.txt and correct_prof.txt differ
 Enderecos traduzidos: 1000 | Page faults: 539 | TLB hits: 54
 Files correct.txt and correct_prof.txt differ
-[?2004h]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JU
+[?2004h]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [K]0;mito@JUScript started on 2026-11-24 14:22:51-03:00 [TERM="xterm-256color" TTY="/dev/pts/4" COLUMNS="173" LINES="20"]
+[?2004h]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ [7m./testes.sh[27m./testes.sh
+[?2004l##### 1. ARGUMENTOS #####
+
+=== Sem argumentos ===
+Esperado: erro de uso, saida 1
+$ ./vm
+Erro: quantidade de argumentos invalida.
+Uso: ./vm <arquivo_enderecos> <fifo|lru> <fifo|lru>
+[codigo de saida: 1]
+
+=== Faltando o algoritmo da TLB ===
+Esperado: erro de uso, saida 1
+$ ./vm addresses.txt lru
+Erro: quantidade de argumentos invalida.
+Uso: ./vm <arquivo_enderecos> <fifo|lru> <fifo|lru>
+[codigo de saida: 1]
+
+=== Argumento extra ===
+Esperado: erro de uso, saida 1
+$ ./vm addresses.txt lru fifo extra
+Erro: quantidade de argumentos invalida.
+Uso: ./vm <arquivo_enderecos> <fifo|lru> <fifo|lru>
+[codigo de saida: 1]
+
+=== Algoritmo de pagina invalido ===
+Esperado: erro de algoritmo, saida 1
+$ ./vm addresses.txt xyz fifo
+Erro: algoritmo de substituicao de pagina invalido 'xyz' (use fifo ou lru).
+[codigo de saida: 1]
+
+=== Algoritmo de TLB invalido ===
+Esperado: erro de algoritmo, saida 1
+$ ./vm addresses.txt lru abc
+Erro: algoritmo de substituicao da TLB invalido 'abc' (use fifo ou lru).
+[codigo de saida: 1]
+
+=== Algoritmo em maiusculas ===
+Esperado: erro de algoritmo, saida 1
+$ ./vm addresses.txt LRU fifo
+Erro: algoritmo de substituicao de pagina invalido 'LRU' (use fifo ou lru).
+[codigo de saida: 1]
+
+##### 2. ARQUIVOS #####
+
+=== Arquivo de enderecos inexistente ===
+Esperado: erro ao abrir, saida 1
+$ ./vm naoexiste.txt lru fifo
+Erro: nao foi possivel abrir 'naoexiste.txt': No such file or directory
+[codigo de saida: 1]
+
+=== Arquivo de enderecos e um diretorio ===
+Esperado: erro de leitura, saida 1
+$ ./vm . lru fifo
+Erro: falha ao ler '.'.
+[codigo de saida: 1]
+
+=== Arquivo sem permissao de leitura (pode nao ter efeito no WSL em /mnt/c ou como root) ===
+Esperado: erro ao abrir, saida 1
+$ ./vm tmp_testes/t_sem_permissao.txt lru fifo
+Enderecos traduzidos: 1 | Page faults: 1 | TLB hits: 0
+[codigo de saida: 0]
+
+=== BACKING_STORE.bin ausente ===
+Esperado: erro ao abrir, saida 1
+$ ./vm addresses.txt lru fifo
+Erro: nao foi possivel abrir 'BACKING_STORE.bin': No such file or directory
+[codigo de saida: 1]
+
+##### 3. FORMATOS INVALIDOS (todos devem dar erro com o numero da linha, saida 1) #####
+
+--- arquivo t_letras.txt (conteudo exato, $ = fim de linha) ---
+abc$
+
+
+=== Letras ===
+Esperado: erro na linha 1
+$ ./vm tmp_testes/t_letras.txt lru fifo
+Erro: formato invalido na linha 1 de 'tmp_testes/t_letras.txt' (esperado um inteiro de 0 a 65535 por linha).
+[codigo de saida: 1]
+
+--- arquivo t_fora_faixa.txt (conteudo exato, $ = fim de linha) ---
+70000$
+
+
+=== Fora da faixa (70000) ===
+Esperado: erro na linha 1
+$ ./vm tmp_testes/t_fora_faixa.txt lru fifo
+Erro: formato invalido na linha 1 de 'tmp_testes/t_fora_faixa.txt' (esperado um inteiro de 0 a 65535 por linha).
+[codigo de saida: 1]
+
+--- arquivo t_dois_valores.txt (conteudo exato, $ = fim de linha) ---
+12 34$
+
+
+=== Dois valores na mesma linha ===
+Esperado: erro na linha 1
+$ ./vm tmp_testes/t_dois_valores.txt lru fifo
+Erro: formato invalido na linha 1 de 'tmp_testes/t_dois_valores.txt' (esperado um inteiro de 0 a 65535 por linha).
+[codigo de saida: 1]
+
+--- arquivo t_linha_vazia.txt (conteudo exato, $ = fim de linha) ---
+100$
+$
+200$
+
+
+=== Linha vazia no meio ===
+Esperado: erro na linha 2
+$ ./vm tmp_testes/t_linha_vazia.txt lru fifo
+Erro: formato invalido na linha 2 de 'tmp_testes/t_linha_vazia.txt' (esperado um inteiro de 0 a 65535 por linha).
+[codigo de saida: 1]
+
+--- arquivo t_negativo.txt (conteudo exato, $ = fim de linha) ---
+-5$
+
+
+=== Numero negativo ===
+Esperado: erro na linha 1
+$ ./vm tmp_testes/t_negativo.txt lru fifo
+Erro: formato invalido na linha 1 de 'tmp_testes/t_negativo.txt' (esperado um inteiro de 0 a 65535 por linha).
+[codigo de saida: 1]
+
+--- arquivo t_overflow.txt (conteudo exato, $ = fim de linha) ---
+99999999999999999999$
+
+
+=== Numero gigante (overflow) ===
+Esperado: erro na linha 1
+$ ./vm tmp_testes/t_overflow.txt lru fifo
+Erro: formato invalido na linha 1 de 'tmp_testes/t_overflow.txt' (esperado um inteiro de 0 a 65535 por linha).
+[codigo de saida: 1]
+
+--- arquivo t_erro_depois.txt (conteudo exato, $ = fim de linha) ---
+100$
+200$
+xyz$
+300$
+
+
+=== Erro na terceira linha ===
+Esperado: erro na linha 3
+$ ./vm tmp_testes/t_erro_depois.txt lru fifo
+Erro: formato invalido na linha 3 de 'tmp_testes/t_erro_depois.txt' (esperado um inteiro de 0 a 65535 por linha).
+[codigo de saida: 1]
+
+--- arquivo t_longa.txt: uma linha com 100 digitos, sem quebra de linha ---
+
+=== Linha muito longa ===
+Esperado: erro na linha 1
+$ ./vm tmp_testes/t_longa.txt lru fifo
+Erro: linha 1 de 'tmp_testes/t_longa.txt' muito longa ou mal formatada.
+[codigo de saida: 1]
+
+##### 4. FORMATOS VALIDOS (devem ser aceitos, saida 0) #####
+
+--- arquivo t_crlf.txt (conteudo exato, $ = fim de linha) ---
+100^M$
+200^M$
+
+
+=== Fim de linha estilo Windows (CRLF) ===
+Esperado: 2 enderecos, saida 0
+$ ./vm tmp_testes/t_crlf.txt lru fifo
+Enderecos traduzidos: 2 | Page faults: 1 | TLB hits: 1
+[codigo de saida: 0]
+
+--- arquivo t_sem_quebra.txt (conteudo exato, $ = fim de linha) ---
+100
+
+=== Ultima linha sem quebra de linha ===
+Esperado: 1 endereco, saida 0
+$ ./vm tmp_testes/t_sem_quebra.txt lru fifo
+Enderecos traduzidos: 1 | Page faults: 1 | TLB hits: 0
+[codigo de saida: 0]
+
+--- arquivo t_espaco_final.txt (conteudo exato, $ = fim de linha) ---
+100 $
+200^I$
+
+
+=== Espaco e tabulacao no final ===
+Esperado: 2 enderecos, saida 0
+$ ./vm tmp_testes/t_espaco_final.txt lru fifo
+Enderecos traduzidos: 2 | Page faults: 1 | TLB hits: 1
+[codigo de saida: 0]
+
+--- arquivo t_limites.txt (conteudo exato, $ = fim de linha) ---
+0$
+65535$
+
+
+=== Enderecos nos limites (0 e 65535) ===
+Esperado: 2 enderecos, saida 0
+$ ./vm tmp_testes/t_limites.txt lru fifo
+Enderecos traduzidos: 2 | Page faults: 2 | TLB hits: 0
+[codigo de saida: 0]
+
+--- arquivo t_vazio.txt (conteudo exato, $ = fim de linha) ---
+
+
+=== Arquivo vazio ===
+Esperado: 0 enderecos, taxas 0.000, saida 0
+$ ./vm tmp_testes/t_vazio.txt lru fifo
+Enderecos traduzidos: 0 | Page faults: 0 | TLB hits: 0
+[codigo de saida: 0]
+--- resumo gerado para o arquivo vazio ---
+Number of Translated Addresses = 0
+Page Faults = 0
+Page Fault Rate = 0.000
+TLB Hits = 0
+TLB Hit Rate = 0.000
+
+##### 5. AS QUATRO COMBINACOES DE ALGORITMOS (arquivo oficial) #####
+
+=== Combinacao: pagina=lru TLB=lru ===
+Enderecos traduzidos: 1000 | Page faults: 539 | TLB hits: 55
+[codigo de saida: 0]
+--- resumo ---
+Number of Translated Addresses = 1000
+Page Faults = 539
+Page Fault Rate = 0.539
+TLB Hits = 55
+TLB Hit Rate = 0.055
+
+
+=== Combinacao: pagina=lru TLB=fifo ===
+Enderecos traduzidos: 1000 | Page faults: 539 | TLB hits: 54
+[codigo de saida: 0]
+--- resumo ---
+Number of Translated Addresses = 1000
+Page Faults = 539
+Page Fault Rate = 0.539
+TLB Hits = 54
+TLB Hit Rate = 0.054
+
+
+=== Combinacao: pagina=fifo TLB=lru ===
+Enderecos traduzidos: 1000 | Page faults: 538 | TLB hits: 55
+[codigo de saida: 0]
+--- resumo ---
+Number of Translated Addresses = 1000
+Page Faults = 538
+Page Fault Rate = 0.538
+TLB Hits = 55
+TLB Hit Rate = 0.055
+
+
+=== Combinacao: pagina=fifo TLB=fifo ===
+Enderecos traduzidos: 1000 | Page faults: 538 | TLB hits: 54
+[codigo de saida: 0]
+--- resumo ---
+Number of Translated Addresses = 1000
+Page Faults = 538
+Page Fault Rate = 0.538
+TLB Hits = 54
+TLB Hit Rate = 0.054
+
+Obs.: os page faults dependem so do algoritmo de pagina (lru/lru e lru/fifo devem dar 539).
+
+##### 6. COMPARACAO COM O GABARITO (lru na pagina, fifo na TLB) #####
+Enderecos traduzidos: 1000 | Page faults: 539 | TLB hits: 54
+[codigo de saida: 0]
+$ diff correct.txt correct_prof.txt
+1005c1005
+< TLB Hit Rate = 0.054
+---
+> TLB Hit Rate = 0.054
+\ No newline at end of file
+(esperado: nenhuma diferenca, ou so o aviso de falta de quebra de linha no final do gabarito)
+
+##### FIM DA BATERIA #####
+[?2004h]0;mito@JUAN-PC: /mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[01;32mmito@JUAN-PC[00m:[01;34m/mnt/c/Users/Mito/Desktop/repositorios/Pong-Champs/Memoria-Virtual[00m$ exit
+[?2004lexit
+
+Script done on 2026-11-24 14:23:16-03:00 [COMMAND_EXIT_CODE="0"]
